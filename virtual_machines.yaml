@@ -1,0 +1,50 @@
+# Yaml configuration file for provisioning virtual machines on esxi host
+# Configuration file is loaded by python and VMs are created remotely over SSH on the esxi host
+resources:
+  # For each virtual machine create a collection of specs
+  - virtual machine:
+      # Set typical variables for VMs, hostname, cpu, mem, disk, etc.
+      hostname: test-vm
+      cpu: 2
+      memory: 4
+      disk: 50
+      # Specify the operating system for the VM
+      # Script will search for the closest iso file, so file name doesn't need to be exact
+      # By default, the script will search for iso files on the local proxmox host
+      # In directory /var/lib/vz/template/iso/
+      operating system: windows server 2019
+      # Set esxi specific variables (if needed)
+      #esxi config:
+        # Script will by default use the least used datastore,
+        # but alternate datastores can be specified here
+        #datastore: Default_Datastore
+        # Set networking specific variables
+        #networking:
+          # Specify the port group for the VM
+          #port group: VM Network
+          # Specify the ethernet adapter for the VM
+          #network adapter: e1000e
+      
+  - virtual machine:
+      hostname: test-vm-2
+      cpu: 2
+      memory: 6
+      disk: 25
+      operating system: windows server 2016
+      #esxi config:
+        #datastore: Default_Datastore
+        #networking:
+          #port group: VM Network
+          #etwork adapter: e1000e
+          
+  - not a vm:
+      stuff: here
+      other: stuff here
+
+# Set defaults for all virtual machines
+defaults:
+  - applications:
+      - chrome
+      - 7zip
+      - notepad++
+      - python
