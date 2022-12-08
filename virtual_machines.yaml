@@ -1,41 +1,40 @@
-# Yaml configuration file for provisioning virtual machines on esxi host
-# Configuration file is loaded by python and VMs are created remotely over SSH on the esxi host
+# Yaml configuration file for provisioning virtual machines on proxmox host
+# Configuration file is loaded by python and VMs are created remotely over SSH on the proxmox host
 resources:
   # For each virtual machine create a collection of specs
+  # Set typical variables for VMs, hostname, cpu, mem, disk, etc.
   - virtual machine:
-      # Set typical variables for VMs, hostname, cpu, mem, disk, etc.
-      hostname: test-vm
-      cpu: 2
-      memory: 4
-      disk: 50
+      # Hostname and display name of the VM
+      hostname: test-vm-1 # REQUIRED #
+      # Number of vcpus
+      cpu: 2 # REQUIRED #
+      # Amount of memory to be allocated to the VM (in GB)
+      memory: 4 # REQUIRED #
+      # Amount of disk space to be allocated to the VM (in GB)
+      disk: 50 # REQUIRED #
       # Specify the operating system for the VM
       # Script will search for the closest iso file, so file name doesn't need to be exact
       # By default, the script will search for iso files on the local proxmox host
       # In directory /var/lib/vz/template/iso/
       operating system: windows server 2019
-      # Set esxi specific variables (if needed)
-      #esxi config:
-        # Script will by default use the least used datastore,
-        # but alternate datastores can be specified here
-        #datastore: Default_Datastore
-        # Set networking specific variables
-        #networking:
-          # Specify the port group for the VM
-          #port group: VM Network
-          # Specify the ethernet adapter for the VM
-          #network adapter: e1000e
+      # Specify the full path/command for the iso image
+      # This should match what would typically be used in the qm create command
+      # NOTE: No parsing or searching will be done on this, it will be directly used in the qm create command
+      iso image path: local:iso/Windows_Server_2019.iso
       
   - virtual machine:
       hostname: test-vm-2
       cpu: 2
       memory: 6
-      disk: 25
+      disk: 40
       operating system: windows server 2016
-      #esxi config:
-        #datastore: Default_Datastore
-        #networking:
-          #port group: VM Network
-          #etwork adapter: e1000e
+          
+  - virtual machine:
+      hostname: test-vm-3
+      cpu: 2
+      memory: 4
+      disk: 40
+      operating system: windows server 2019
           
   - not a vm:
       stuff: here
@@ -43,6 +42,7 @@ resources:
 
 # Set defaults for all virtual machines
 defaults:
+  # Set default applications for all virtual machines
   - applications:
       - chrome
       - 7zip

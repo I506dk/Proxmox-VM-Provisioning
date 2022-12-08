@@ -14,10 +14,10 @@ from load_configs import parse_yaml
 
 # Credentials for logging in via ssh
 username = "root"
-password = "some_password_here"
+password = "<password>"
 
 # Proxmox host ip address
-host = "proxmox_ip_address"
+host = "<ip_address>"
 
 
 # Define function to get the key for a specific value
@@ -79,45 +79,11 @@ def get_host_data(ssh_client):
 
     header = vm_list[0]
     existing_vms = [dict(zip(header, vm)) for vm in vm_list[1:]]
-    print(existing_vms)
     
     # Print message
     print("Existing virtual machines found on host: {}".format(len(existing_vms)))
 
     return physical_memory, physical_cores, existing_vms, iso_files
-
-
-# Define function to validate all virtual machine configurations
-def validate():
-    return
-
-
-# Define a function to create a virtual machine
-def create_vm(ssh_client, vm_number, full_iso, vm_name, memory, cores, disk, sockets=1):
-    # vm_number = "105"
-    # full_iso = "local:iso/Windows_Server_2019_auto.iso"
-    # vm_name = "test-server"
-    # memory = 4096
-    # sockets = 1
-    # cores = 2
-    # disk = 40
-
-    # Command to create a virtual machine along with the respective disk
-    create_command = 'qm create {} --ide2 {},media=cdrom --name {} --memory {} --sockets {} --cores {} --net0 virtio,bridge=vmbr0,firewall=1 --boot order="ide0;ide2;net0" --scsihw virtio-scsi-single --ide0 local-lvm:{}'.format(
-        vm_number,
-        full_iso,
-        vm_name,
-        memory,
-        sockets,
-        cores,
-        disk
-    )
-    print(create_command)
-    
-    # Create the virtual machine
-    #stdin, stdout, stderr = ssh_client.exec_command(create_command)
-    
-    return
 
 
 # Define a function to calculate limits for virtual machines
@@ -158,6 +124,39 @@ def calculate_limits(total_memory, existing_configs):
     free_memory = int(total_memory) - int(memory_in_use)
 
     return free_memory, starting_id
+    
+
+# Define a function to create a virtual machine
+def create_vm(ssh_client, vm_number, full_iso, vm_name, memory, cores, disk, sockets=1):
+    # vm_number = "105"
+    # full_iso = "local:iso/Windows_Server_2019_auto.iso"
+    # vm_name = "test-server"
+    # memory = 4096
+    # sockets = 1
+    # cores = 2
+    # disk = 40
+
+    # Command to create a virtual machine along with the respective disk
+    create_command = 'qm create {} --ide2 {},media=cdrom --name {} --memory {} --sockets {} --cores {} --net0 virtio,bridge=vmbr0,firewall=1 --boot order="ide0;ide2;net0" --scsihw virtio-scsi-single --ide0 local-lvm:{}'.format(
+        vm_number,
+        full_iso,
+        vm_name,
+        memory,
+        sockets,
+        cores,
+        disk
+    )
+    print(create_command)
+    
+    # Create the virtual machine
+    #stdin, stdout, stderr = ssh_client.exec_command(create_command)
+    
+    return
+    
+
+# Define function to validate all virtual machine configurations
+def validate():
+    return
 
     
 # Function to login to ssh service for a given ip or hostname
@@ -192,55 +191,52 @@ def ssh_connect(hostname, username, password, port=22):
 
         # Parse yaml configuration data
         current_vm_configs, vm_defaults = parse_yaml(vm_configs)
-        #print(current_vm_configs, vm_defaults)
-        
-        #print(current_vm_configs)
+
+        # By default, if no ISO file is specified in the yaml config file,
+        # The script will look for the corresponding OS iso and modify it.
+        # Initialize list to hold operating systems to be modified
+        iso_files_to_modify = []
+        for virtual_machine in current_vm_configs:
+            # Get all operating systems for configs that don't explicitly supply an iso path
+            if not virtual_machine.__contains__("iso image path"):
+                current_os = virtual_machine["operating system"]
+                iso_files_to_modify.append(current_os)
+
+        # Initialize list to hold modified iso image names
+        modified_iso_images = []
+        # Modify each iso image
+        for operating_system in iso_files_to_modify:
+            if "windows" in str(operating_system).lower():
+                # Search for the respective iso image
+                iso_image = str(search(operating_system, existing_iso_files)[0])
+                # Modify the windows image
+                iso_image = modify_windows(client, iso_image)
+                modified_iso_images.append(iso_image)
+            else:
+                print("Not a windows image")
+ 
+        # Create each virtual machine
         for virtual_machine in current_vm_configs:
             # Get all virtual machine attributes
-            current_os = virtual_machine["operating system"]
-            #ide0 = "local:iso/" + str(search(current_os, existing_iso_files)[0])
-            current_hostname = virtual_machine["hostname"]
-            current_cores = virtual_machine["cpu"]
-            current_memory = virtual_machine["memory"]
-            current_disk = virtual_machine["disk"]
-            
-            #
-            current_iso = str(search(current_os, existing_iso_files)[0])
-            print(current_iso)
-            # Extract the iso image files
-            current_image_path = extract_files(client, current_iso)
-            
+            if not virtual_machine.__contains__("iso image path"):
+                ide0 = "local:iso/" + str(search(current_os, modified_iso_images)[0])
+                current_hostname = virtual_machine["hostname"]
+                current_cores = virtual_machine["cpu"]
+                current_memory = int(virtual_machine["memory"]) * 1024
+                current_disk = int(virtual_machine["disk"]) * 1024
+            # Use raw path if given
+            else:
+                ide0 = virtual_machine["iso image path"]
+                current_hostname = virtual_machine["hostname"]
+                current_cores = virtual_machine["cpu"]
+                current_memory = int(virtual_machine["memory"]) * 1024
+                current_disk = int(virtual_machine["disk"]) * 1024
+
             # Create the virtual machine
-            #create_vm(client, initial_vm_id, ide0, current_hostname, current_memory, current_cores, current_disk, current_sockets=1)
+            create_vm(client, initial_vm_id, ide0, current_hostname, str(current_memory), str(current_cores), str(current_disk))
             
             # Increment the VM ID for the next VM
-            initial_vm_id += 1
-        
-        f
-        
-        # qm create 105 --ide2 ISO_bank:iso/W2019_x64.iso,media=cdrom --ide0 ISO_bank:iso/virtio-win.iso,media=cdrom --name Test-Serv --memory 5000 --onboot no --sockets 1 --cores 2 --net0 virtio,bridge=vmbr1 --net1 virtio,bridge=vmbr0 --boot order=ide2 --scsi0 OVA_bank:100,format=qcow2 --scsihw virtio-scsi-pci
-        #qm create 105 --ide0 local:iso/Windows_Server_2019_auto.iso,media=cdrom --name Test-Serv --memory 4096 --sockets 1 --cores 2 --net0 virtio,bridge=vmbr0,firewall=1 --boot order="ide0;ide2;net0" --scsihw virtio-scsi-single --scsi0 local-lvm:40# --net0 virtio,bridge=vmbr0 --boot order=ide0;ide2;net0 --scsi0 OVA_bank:100,format=qcow2 --scsihw virtio-scsi-single
-
-
-        #https://www.python.org/ftp/python/3.11.0/python-3.11.0-amd64.exe
-        
-        ##### FOR TESTING #####
-        current_iso = "Windows_Server_2019.iso"
-        #######################
-        
-        
-        # Extract the iso image files
-        current_image_path = extract_files(client, current_iso)
-        
-        # Modify the iso image
-        #if "windows" in str(current_iso).lower():
-            # Modify the windows image
-        #    modify_windows(client, current_iso)
-            #modify_windows(ssh_client, file_name, apps=["chrome", "notepad++", "7zip"])
-        #else:
-        #    print("Not a windows image")
-        
-        
+            initial_vm_id += 1     
 
     # Catch errors for failed login or connection rejection
     except paramiko.ssh_exception.AuthenticationException as error:
@@ -260,7 +256,7 @@ def ssh_connect(hostname, username, password, port=22):
  
 # Beginning of main
 if __name__ == '__main__':
-    # Test ssh connection to esxi
+    # Test ssh connection to proxmox
     # If successful, create virtual machines
     ssh_connect(host, username, password)
 

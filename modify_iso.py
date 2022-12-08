@@ -36,7 +36,7 @@ def extract_files(ssh_client, iso_file):
     if "File not found." in file_check:
         print("Error. ISO image not found.")
     else:
-        print("ISO image found. Continuing...")
+        print("ISO image {} found. Continuing...".format(iso_file))
         # Make directory to hold iso files
         # If directory exists, delete it and recreate it
         iso_output_path = default_path + "temp_iso_files/"
@@ -89,23 +89,16 @@ def modify_windows(ssh_client, file_name, apps=["chrome", "notepad++", "7zip"]):
     # Extract the windows files
     file_path = extract_files(ssh_client, file_name)
 
-
     # Default path for iso file storage on proxmox
     default_path = "/var/lib/vz/template/iso/"
     # Remove the .iso from the filename
     iso_name = re.match("^([^.]+)", str(file_name))[0]
+    # Print message
+    print("Modifying iso image: {}".format(iso_name))
     
-    
-    # Dynamically get the contents of the unattended file example
-    #unattended_path = str(file_path) + "support/samples/headlessunattend.xml"
-    #stdin, stdout, stderr = ssh_client.exec_command("cat {}".format(unattended_path))
-    #unattended_xml = stdout.read().decode("utf-8").strip()
-    #xml_data = ET.fromstring(unattended_xml)
-    #print(xml_data[0])
-    
-    #for x in xml_data[0]:
-    #    print(x.tag, x.attrib)
-    
+    #
+    # Find a way to dynamically get the contents of the unattended file example
+    #
     
     # Create directory for setup scripts
     # ADD in check to see if this path already exists
@@ -156,8 +149,12 @@ def modify_windows(ssh_client, file_name, apps=["chrome", "notepad++", "7zip"]):
     exit_status = stdout.channel.recv_exit_status()
     if exit_status != 0:
         print("Failed to create new iso image with error code: {}".format(exit_status))
-
-    return
-    
+        
     # Cleanup
+    
+    
+    # Return Final iso save name
+    iso_save_name = str(iso_name) + "_auto.iso"
+
+    return iso_save_name
 
