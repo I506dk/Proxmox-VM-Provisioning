@@ -140,7 +140,7 @@ def create_vm(ssh_client, vm_number, full_iso, vm_name, memory, cores, disk, soc
     # Set vm to autostart
     # qm set $VMID --onboot 1
     # --start 0
-    create_command = 'qm create {} --ide2 {},media=cdrom --name {} --memory {} --sockets {} --cores {} --net0 virtio,bridge=vmbr0,firewall=1 --boot order="ide0;ide2;net0" --scsihw virtio-scsi-single --ide0 local-lvm:{}'.format(
+    create_command = 'qm create {} --ide2 {},media=cdrom --name {} --memory {} --sockets {} --cores {} --net0 virtio,bridge=vmbr0,firewall=1 --boot order="ide0;ide2;net0" --scsihw virtio-scsi-single --ide0 local-lvm:{} --start 0'.format(
         vm_number,
         full_iso,
         vm_name,
