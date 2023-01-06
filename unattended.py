@@ -10,7 +10,7 @@
 
 # Define a function to dynamically add in powershell scripts to be run on first logon
 # Order number default needs to match the last number of the non dynamic command calls in the xml_data_2019
-order_number = 11
+order_number = 12
 def add_powershell(script_name):
     # Script name
     regular_name = script_name.replace(".ps1", '')
@@ -29,7 +29,7 @@ def add_powershell(script_name):
 
 
 # Define function to create unattend.xml file
-def xml_data_2019(hostname, admin_password, script_list=["install_chrome.ps1", "install_notepad.ps1", "install_7zip.ps1"], operating_system="Windows Server 2019 SERVERSTANDARD", timezone="Pacific Standard Time"):
+def xml_data_2019(hostname="test-hostname", admin_password="temporary_password", script_list=["install_chrome.ps1", "install_notepad.ps1", "install_7zip.ps1"], operating_system="Windows Server 2019 SERVERSTANDARD", timezone="Pacific Standard Time"):
     # Create string to add to xml data
     other_commands = ""
     
@@ -120,6 +120,7 @@ def xml_data_2019(hostname, admin_password, script_list=["install_chrome.ps1", "
                 </UserData>
             </component>
         </settings>
+        
         <settings pass="specialize">
             <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                 <OEMInformation>
@@ -129,19 +130,24 @@ def xml_data_2019(hostname, admin_password, script_list=["install_chrome.ps1", "
                 <TimeZone>{timezone}</TimeZone>
                 <RegisteredOwner/>
             </component>
+            
             <component name="Microsoft-Windows-ServerManager-SvrMgrNc" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                 <DoNotOpenServerManagerAtLogon>true</DoNotOpenServerManagerAtLogon>
             </component>
+            
             <component name="Microsoft-Windows-IE-ESC" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                 <IEHardenAdmin>false</IEHardenAdmin>
                 <IEHardenUser>true</IEHardenUser>
             </component>
+            
             <component name="Microsoft-Windows-OutOfBoxExperience" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                 <DoNotOpenInitialConfigurationTasksAtLogon>true</DoNotOpenInitialConfigurationTasksAtLogon>
             </component>
+            
             <component name="Microsoft-Windows-Security-SPP-UX" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                 <SkipAutoActivation>true</SkipAutoActivation>
             </component>
+            
             <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                 <RunSynchronous>
                     <RunSynchronousCommand wcm:action="add">
@@ -156,7 +162,25 @@ def xml_data_2019(hostname, admin_password, script_list=["install_chrome.ps1", "
                     </RunSynchronousCommand>  
                 </RunSynchronous>
             </component>
+            
+            <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" language="neutral" name="Microsoft-Windows-TerminalServices-LocalSessionManager" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" versionScope="nonSxS">
+                <fDenyTSConnections>false</fDenyTSConnections>
+            </component>
+            <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" language="neutral" name="Microsoft-Windows-TerminalServices-RDP-WinStationExtensions" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" versionScope="nonSxS">
+                <UserAuthentication>0</UserAuthentication>
+            </component>
+            <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" language="neutral" name="Networking-MPSSVC-Svc" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" versionScope="nonSxS">
+                <FirewallGroups>
+                    <FirewallGroup wcm:action="add" wcm:keyValue="RemoteDesktop">
+                        <Active>true</Active>
+                        <Group>Remote Desktop</Group>
+                        <Profile>all</Profile>
+                    </FirewallGroup>
+                </FirewallGroups>
+            </component>
+            
         </settings>
+        
         <settings pass="oobeSystem">
             <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             
@@ -207,13 +231,11 @@ def xml_data_2019(hostname, admin_password, script_list=["install_chrome.ps1", "
                         <Description>Disable Hibernation Mode</Description>
                     </SynchronousCommand>
                     
-                    <!--
                     <SynchronousCommand wcm:action="add">
                         <CommandLine>%SystemRoot%\System32\reg.exe ADD HKLM\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters\ /v DisabledComponents /t REG_DWORD /d 0xFF /f</CommandLine>
-                        Order>7</Order>
+                        <Order>7</Order>
                         <Description>Disable IPv6</Description>
                     </SynchronousCommand>
-                    -->
                     
                     <!-- WITHOUT WINDOWS UPDATES -->
                     <!--
@@ -244,6 +266,13 @@ def xml_data_2019(hostname, admin_password, script_list=["install_chrome.ps1", "
                         <Order>11</Order>
                         <RequiresUserInput>true</RequiresUserInput>
                     </SynchronousCommand>
+                    
+                    <SynchronousCommand wcm:action="add">
+                        <CommandLine>%SystemRoot%\System32\reg.exe ADD HKLM\SYSTEM\CurrentControlSet\Control\Network\NewNetworkWindowOff /f</CommandLine>
+                        <Order>12</Order>
+                        <Description>Disable Network Discovery Prompt</Description>
+                    </SynchronousCommand>
+
 {other_commands}
                     
                     <!-- END WITH WINDOWS UPDATES -->

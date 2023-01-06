@@ -81,13 +81,13 @@ def extract_files(ssh_client, iso_file):
     # Return the final path to the files
     final_path = iso_output_path + "mnt/"
 
-    return final_path
+    return final_path, iso_output_path
 
 
 # Define a function to modify windows images
 def modify_windows(ssh_client, file_name, apps=["chrome", "notepad++", "7zip"]):
     # Extract the windows files
-    file_path = extract_files(ssh_client, file_name)
+    file_path, output_path = extract_files(ssh_client, file_name)
 
     # Default path for iso file storage on proxmox
     default_path = "/var/lib/vz/template/iso/"
@@ -151,7 +151,7 @@ def modify_windows(ssh_client, file_name, apps=["chrome", "notepad++", "7zip"]):
         print("Failed to create new iso image with error code: {}".format(exit_status))
         
     # Cleanup
-    
+    # delete iso_output_path
     
     # Return Final iso save name
     iso_save_name = str(iso_name) + "_auto.iso"
