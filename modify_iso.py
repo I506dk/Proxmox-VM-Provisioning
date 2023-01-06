@@ -11,7 +11,7 @@ import requests
 import xml.etree.ElementTree as ET
 
 # Import functions from other files
-from unattended import xml_data_2019
+from unattended import xml_data
 from powershell_scripts import *
 
 
@@ -85,7 +85,7 @@ def extract_files(ssh_client, iso_file):
 
 
 # Define a function to modify windows images
-def modify_windows(ssh_client, file_name, apps=["chrome", "notepad++", "7zip"]):
+def modify_windows(ssh_client, file_name, os, apps=["chrome", "notepad++", "7zip"]):
     # Extract the windows files
     file_path, output_path = extract_files(ssh_client, file_name)
 
@@ -133,13 +133,40 @@ def modify_windows(ssh_client, file_name, apps=["chrome", "notepad++", "7zip"]):
     
     # Create xml data for automated setup
     #xml_data = create_xml("Windows Server 2019 SERVERSTANDARD", "Windows_User")
-    xml_data = xml_data_2019("Test-2019", "Windows_User", script_save_names)
+    # Defaults for iso image hostname and password
+    default_hostname = "temp-host"
+    default_password = "temp_password"
+    
+    # Print default message
+    print("\n  Setting defaults for iso image: ")
+    print("  - Hostname: {}".format(default_hostname))
+    print("  - Administrator password: {}\n".format(default_password))
+    
+    # Get xml data
+    if "2022" in str(os):
+        # Set version to Server 2022 Standard
+        xml = xml_data(default_hostname, default_password, "Windows Server 2022 SERVERSTANDARD", script_save_names)
+    elif "2019" in str(os):
+        # Set version to Server 2022 Standard
+        xml = xml_data(default_hostname, default_password, "Windows Server 2019 SERVERSTANDARD", script_save_names)
+    elif "2016" in str(os):
+        # Set version to Server 2022 Standard
+        xml = xml_data(default_hostname, default_password, "Windows Server 2016 SERVERSTANDARD", script_save_names)
+    elif "2012" in str(os):
+        # Set version to Server 2022 Standard
+        xml = xml_data(default_hostname, default_password, "Windows Server 2012 SERVERSTANDARD", script_save_names)
+    else:
+        # Set version to Server 2022 Standard
+        print("Unknown Server variant. Defaulting to Server 2019.")
+        xml = xml_data(default_hostname, default_password, "Windows Server 2019 SERVERSTANDARD", script_save_names)
+    
+    #xml_data = xml_data_2019(default_hostname, default_password, script_save_names)
     # Escape broken characters
-    xml_data = xml_data.replace('\r', "\\r")
-    xml_data = xml_data.replace('\v', "\\v")
+    xml = xml.replace('\r', "\\r")
+    xml = xml.replace('\v', "\\v")
     
     # Write xml data to file
-    stdin, stdout, stderr = ssh_client.exec_command("echo '{}' >> {}Autounattend.xml".format(str(xml_data), file_path))
+    stdin, stdout, stderr = ssh_client.exec_command("echo '{}' >> {}Autounattend.xml".format(str(xml), file_path))
     exit_status = stdout.channel.recv_exit_status()
     if exit_status != 0:
         print("Failed to create unattend.xml file with error code: {}".format(exit_status))
@@ -151,7 +178,10 @@ def modify_windows(ssh_client, file_name, apps=["chrome", "notepad++", "7zip"]):
         print("Failed to create new iso image with error code: {}".format(exit_status))
         
     # Cleanup
-    # delete iso_output_path
+    #stdin, stdout, stderr = ssh_client.exec_command("rm -rf {}".format(output_path))
+    #exit_status = stdout.channel.recv_exit_status()
+    #if exit_status != 0:
+    #    print("Failed to cleanup: {}".format(exit_status))
     
     # Return Final iso save name
     iso_save_name = str(iso_name) + "_auto.iso"

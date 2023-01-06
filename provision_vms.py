@@ -137,10 +137,8 @@ def create_vm(ssh_client, vm_number, full_iso, vm_name, memory, cores, disk, soc
     # disk = 40
 
     # Command to create a virtual machine along with the respective disk
-    # Set vm to autostart
-    # qm set $VMID --onboot 1
-    # --start 0
-    create_command = 'qm create {} --ide2 {},media=cdrom --name {} --memory {} --sockets {} --cores {} --net0 virtio,bridge=vmbr0,firewall=1 --boot order="ide0;ide2;net0" --scsihw virtio-scsi-single --ide0 local-lvm:{} --start 0'.format(
+    # Set vm to autostart --start 1
+    create_command = 'qm create {} --ide2 {},media=cdrom --name {} --memory {} --sockets {} --cores {} --net0 e1000,bridge=vmbr0,firewall=1 --boot order="ide0;ide2;net0" --scsihw virtio-scsi-single --ide0 local-lvm:{} --agent enabled=1 --start 1'.format(
         vm_number,
         full_iso,
         vm_name,
@@ -149,11 +147,14 @@ def create_vm(ssh_client, vm_number, full_iso, vm_name, memory, cores, disk, soc
         cores,
         disk
     )
-    print(create_command)
+    #print(create_command)
     
     # Create the virtual machine
-    #stdin, stdout, stderr = ssh_client.exec_command(create_command)
-    
+    stdin, stdout, stderr = ssh_client.exec_command(create_command)
+    exit_status = stdout.channel.recv_exit_status()
+    if exit_status != 0:
+        print("Failed to create virtual machine with error code: {}".format(exit_status))
+
     return
     
 
@@ -206,15 +207,16 @@ def ssh_connect(hostname, username, password, port=22):
                 iso_files_to_modify.append(current_os)
 
         # Initialize list to hold modified iso image names
-        modified_iso_images = []
+        # Initialize dictionary to hold modified iso image names for the respective OS
+        modified_iso_images = {}
         # Modify each iso image
         for operating_system in iso_files_to_modify:
             if "windows" in str(operating_system).lower():
                 # Search for the respective iso image
                 iso_image = str(search(operating_system, existing_iso_files)[0])
                 # Modify the windows image
-                iso_image = modify_windows(client, iso_image)
-                modified_iso_images.append(iso_image)
+                iso_image = modify_windows(client, iso_image, operating_system, vm_defaults["applications"])
+                modified_iso_images[str(operating_system)] = iso_image
             else:
                 print("Not a windows image")
  
@@ -222,7 +224,8 @@ def ssh_connect(hostname, username, password, port=22):
         for virtual_machine in current_vm_configs:
             # Get all virtual machine attributes
             if not virtual_machine.__contains__("iso image path"):
-                ide0 = "local:iso/" + str(search(current_os, modified_iso_images)[0])
+                current_iso = modified_iso_images[virtual_machine["operating system"]]
+                ide0 = "local:iso/" + current_iso
                 current_hostname = virtual_machine["hostname"]
                 current_cores = virtual_machine["cpu"]
                 current_memory = int(virtual_machine["memory"]) * 1024
@@ -233,10 +236,13 @@ def ssh_connect(hostname, username, password, port=22):
                 current_hostname = virtual_machine["hostname"]
                 current_cores = virtual_machine["cpu"]
                 current_memory = int(virtual_machine["memory"]) * 1024
-                current_disk = int(virtual_machine["disk"]) * 1024
+                current_disk = int(virtual_machine["disk"])
 
             # Create the virtual machine
             create_vm(client, initial_vm_id, ide0, current_hostname, str(current_memory), str(current_cores), str(current_disk))
+            
+            # Let the VM finish, then come back and configrue each one
+            
             
             # Increment the VM ID for the next VM
             initial_vm_id += 1     

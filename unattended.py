@@ -29,7 +29,7 @@ def add_powershell(script_name):
 
 
 # Define function to create unattend.xml file
-def xml_data_2019(hostname="test-hostname", admin_password="temporary_password", script_list=["install_chrome.ps1", "install_notepad.ps1", "install_7zip.ps1"], operating_system="Windows Server 2019 SERVERSTANDARD", timezone="Pacific Standard Time"):
+def xml_data(hostname, admin_password, operating_system="Windows Server 2019 SERVERSTANDARD", script_list=["install_chrome.ps1", "install_notepad.ps1", "install_7zip.ps1"], timezone="Pacific Standard Time"):
     # Create string to add to xml data
     other_commands = ""
     
@@ -268,7 +268,7 @@ def xml_data_2019(hostname="test-hostname", admin_password="temporary_password",
                     </SynchronousCommand>
                     
                     <SynchronousCommand wcm:action="add">
-                        <CommandLine>%SystemRoot%\System32\reg.exe ADD HKLM\SYSTEM\CurrentControlSet\Control\Network\NewNetworkWindowOff /f</CommandLine>
+                        <CommandLine>%SystemRoot%\System32\reg.exe ADD HKLM\SYSTEM\CurrentControlSet\Control\\Network\\NewNetworkWindowOff /f</CommandLine>
                         <Order>12</Order>
                         <Description>Disable Network Discovery Prompt</Description>
                     </SynchronousCommand>
@@ -302,9 +302,8 @@ def xml_data_2019(hostname="test-hostname", admin_password="temporary_password",
                 <EnableLUA>false</EnableLUA>
             </component>
         </settings>
-        <cpi:offlineImage cpi:source="wim:c:/wim/install.wim#{operating_system}" xmlns:cpi="urn:schemas-microsoft-com:cpi" />
+        <cpi:offlineImage cpi:source="wim:c:/wim/install.wim#{operating_system}" xmlns:cpi="urn:schemas-microsoft-com:cpi"/>
     </unattend>
     """
-    #print(xml_data)
 
     return xml_data

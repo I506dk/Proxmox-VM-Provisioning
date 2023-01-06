@@ -77,12 +77,3 @@ def parse_yaml(yaml_data):
 
     return vm_configuations, defaults
 
-# Load VM configurations from yaml file
-# Specify path if not in current working directory
-#vm_configs = load_configs()
-
-# Parse yaml configuration data
-#current_vm_configs, vm_defaults = parse_yaml(vm_configs)
-
-#print(current_vm_configs)
-
