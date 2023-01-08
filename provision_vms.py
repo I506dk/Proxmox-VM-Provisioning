@@ -128,14 +128,6 @@ def calculate_limits(total_memory, existing_configs):
 
 # Define a function to create a virtual machine
 def create_vm(ssh_client, vm_number, full_iso, vm_name, memory, cores, disk, sockets=1):
-    # vm_number = "105"
-    # full_iso = "local:iso/Windows_Server_2019_auto.iso"
-    # vm_name = "test-server"
-    # memory = 4096
-    # sockets = 1
-    # cores = 2
-    # disk = 40
-
     # Command to create a virtual machine along with the respective disk
     # Set vm to autostart --start 1
     create_command = 'qm create {} --ide2 {},media=cdrom --name {} --memory {} --sockets {} --cores {} --net0 e1000,bridge=vmbr0,firewall=1 --boot order="ide0;ide2;net0" --scsihw virtio-scsi-single --ide0 local-lvm:{} --agent enabled=1 --start 1'.format(
@@ -147,7 +139,6 @@ def create_vm(ssh_client, vm_number, full_iso, vm_name, memory, cores, disk, soc
         cores,
         disk
     )
-    #print(create_command)
     
     # Create the virtual machine
     stdin, stdout, stderr = ssh_client.exec_command(create_command)
@@ -241,7 +232,7 @@ def ssh_connect(hostname, username, password, port=22):
             # Create the virtual machine
             create_vm(client, initial_vm_id, ide0, current_hostname, str(current_memory), str(current_cores), str(current_disk))
             
-            # Let the VM finish, then come back and configrue each one
+            # Let the VM finish, then come back and configure each one
             
             
             # Increment the VM ID for the next VM

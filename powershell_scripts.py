@@ -90,6 +90,62 @@ Start-Process -FilePath $installerPath -Args "/S" -Verb RunAs -Wait
 Remove-Item $installerPath"""
     
     return command, script_name
+    
+    
+# Define function that contains powershell script to install windows updates
+def install_updates():
+    # Script save name
+    script_name = "install_updates.ps1"
+    # Command to install windows updates
+    command = """[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+Install-PackageProvider -Name Nuget -MinimumVersion 2.8.5.201 -Force
+Install-Module -Name PSWindowsUpdate -Force
+Get-Package -Name PSWindowsUpdate
+Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -ForceDownload -ForceInstall -AutoReboot
+
+Add-WUServiceManager -MicrosoftUpdate
+Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -ForceDownload -ForceInstall -AutoReboot
+
+$Updates = Get-WindowsUpdate      
+$InstallKB = ($Updates).KB | Select-Object -First 2
+$InstallKB
+Get-WindowsUpdate -KBArticleID $InstallKB -ForceDownload -ForceInstall -Confirm -AcceptAll -IgnoreReboot 
+
+Restart-Computer"""
+
+    return command, script_name
+    
+
+# Define function that contains powershell script to install virtio drivers
+def install_virtio():
+    # Script save name
+    script_name = "install_virtio.ps1"
+    # Command to install virtio drivers
+    command = """# Powershell script to install virtio drivers and qemu agent for proxmox virtual machines
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+# Virtio guest tools installer url
+$installer_url = "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-virtio/virtio-win-guest-tools.exe"
+
+function download_file {
+    [CmdletBinding()]
+	param(
+		[Parameter()]
+		[string] $url
+	)
+
+    # Download file and save to temp directory
+    Invoke-WebRequest -Uri $url -OutFile "$env:TEMP\$( Split-Path -Path $url -Leaf )" | Out-Null
+    # Start the installer or executable
+    Start-Process -FilePath "$env:TEMP\$( Split-Path -Path $url -Leaf )" -ArgumentList "/quiet /passive /norestart" -Wait
+    # Delete the file afterwards
+    Remove-item "$env:TEMP\$( Split-Path -Path $url -Leaf )"
+}
+
+# Download and install the virtio installer
+download_file($installer_url)"""
+
+    return command, script_name
 
 
 # Define a function to get all function definitions from this file.

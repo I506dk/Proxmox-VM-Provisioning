@@ -10,7 +10,7 @@
 
 # Define a function to dynamically add in powershell scripts to be run on first logon
 # Order number default needs to match the last number of the non dynamic command calls in the xml_data_2019
-order_number = 12
+order_number = 8
 def add_powershell(script_name):
     # Script name
     regular_name = script_name.replace(".ps1", '')
@@ -237,45 +237,21 @@ def xml_data(hostname, admin_password, operating_system="Windows Server 2019 SER
                         <Description>Disable IPv6</Description>
                     </SynchronousCommand>
                     
-                    <!-- WITHOUT WINDOWS UPDATES -->
-                    <!--
-                    <SynchronousCommand wcm:action="add">
-                        <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\enable-winrm.ps1</CommandLine>
-                        <Description>Enable WinRM</Description>
-                        <Order>8</Order>
-                    </SynchronousCommand>
-                    -->
-                    <!-- END WITHOUT WINDOWS UPDATES -->
-                    <!-- WITH WINDOWS UPDATES -->
-                    <SynchronousCommand wcm:action="add">
-                        <CommandLine>cmd.exe /c a:\microsoft-updates.bat</CommandLine>
-                        <Order>9</Order>
-                        <Description>Enable Microsoft Updates</Description>
-                    </SynchronousCommand>
-                    
-                    <SynchronousCommand wcm:action="add">
-                        <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\disable-screensaver.ps1</CommandLine>
-                        <Description>Disable Screensaver</Description>
-                        <Order>10</Order>
-                        <RequiresUserInput>true</RequiresUserInput>
-                    </SynchronousCommand>
-                    
-                    <SynchronousCommand wcm:action="add">
-                        <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\win-updates.ps1</CommandLine>
-                        <Description>Install Windows Updates</Description>
-                        <Order>11</Order>
-                        <RequiresUserInput>true</RequiresUserInput>
-                    </SynchronousCommand>
-                    
                     <SynchronousCommand wcm:action="add">
                         <CommandLine>%SystemRoot%\System32\reg.exe ADD HKLM\SYSTEM\CurrentControlSet\Control\\Network\\NewNetworkWindowOff /f</CommandLine>
-                        <Order>12</Order>
+                        <Order>8</Order>
                         <Description>Disable Network Discovery Prompt</Description>
                     </SynchronousCommand>
+                    
+                    <!-- <SynchronousCommand wcm:action="add">
+                        <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File C:\Windows\Setup\Scripts\install_updates.ps1</CommandLine>
+                        <Description>Install Windows Updates</Description>
+                        <Order>99</Order>
+                        <RequiresUserInput>true</RequiresUserInput>
+                    </SynchronousCommand> -->
 
 {other_commands}
                     
-                    <!-- END WITH WINDOWS UPDATES -->
                 </FirstLogonCommands>
                 
                 <OOBE>

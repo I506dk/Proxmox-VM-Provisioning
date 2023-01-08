@@ -130,9 +130,26 @@ def modify_windows(ssh_client, file_name, os, apps=["chrome", "notepad++", "7zip
                 exit_status = stdout.channel.recv_exit_status()
                 if exit_status != 0:
                     print("Failed to write {} script to file with error code: {}".format(app_name, exit_status))
+                    
+    # Write virtio driver install script to iso file
+    driver_code, driver_save_name = install_virtio()
+    stdin, stdout, stderr = ssh_client.exec_command("echo '{}' >> {}{}".format(driver_code, script_directory, driver_save_name))
+    exit_status = stdout.channel.recv_exit_status()
+    if exit_status != 0:
+        print("Failed to write virtio driver install script to file with error code: {}".format(exit_status))
+    # Add run command to unattend xml file
+    script_save_names.append(driver_save_name)
+                    
+    # Write windows update script to iso file
+    update_code, update_save_name = install_updates()
+    stdin, stdout, stderr = ssh_client.exec_command("echo '{}' >> {}{}".format(update_code, script_directory, update_save_name))
+    exit_status = stdout.channel.recv_exit_status()
+    if exit_status != 0:
+        print("Failed to write windows update script to file with error code: {}".format(exit_status))
+    # Add run command to unattend xml file
+    script_save_names.append(update_save_name)
+        
     
-    # Create xml data for automated setup
-    #xml_data = create_xml("Windows Server 2019 SERVERSTANDARD", "Windows_User")
     # Defaults for iso image hostname and password
     default_hostname = "temp-host"
     default_password = "temp_password"
@@ -147,16 +164,16 @@ def modify_windows(ssh_client, file_name, os, apps=["chrome", "notepad++", "7zip
         # Set version to Server 2022 Standard
         xml = xml_data(default_hostname, default_password, "Windows Server 2022 SERVERSTANDARD", script_save_names)
     elif "2019" in str(os):
-        # Set version to Server 2022 Standard
+        # Set version to Server 2019 Standard
         xml = xml_data(default_hostname, default_password, "Windows Server 2019 SERVERSTANDARD", script_save_names)
     elif "2016" in str(os):
-        # Set version to Server 2022 Standard
+        # Set version to Server 2016 Standard
         xml = xml_data(default_hostname, default_password, "Windows Server 2016 SERVERSTANDARD", script_save_names)
     elif "2012" in str(os):
-        # Set version to Server 2022 Standard
+        # Set version to Server 2012 Standard
         xml = xml_data(default_hostname, default_password, "Windows Server 2012 SERVERSTANDARD", script_save_names)
     else:
-        # Set version to Server 2022 Standard
+        # Default to Server 2019 Standard if version can't be parsed
         print("Unknown Server variant. Defaulting to Server 2019.")
         xml = xml_data(default_hostname, default_password, "Windows Server 2019 SERVERSTANDARD", script_save_names)
     
@@ -178,10 +195,10 @@ def modify_windows(ssh_client, file_name, os, apps=["chrome", "notepad++", "7zip
         print("Failed to create new iso image with error code: {}".format(exit_status))
         
     # Cleanup
-    #stdin, stdout, stderr = ssh_client.exec_command("rm -rf {}".format(output_path))
-    #exit_status = stdout.channel.recv_exit_status()
-    #if exit_status != 0:
-    #    print("Failed to cleanup: {}".format(exit_status))
+    stdin, stdout, stderr = ssh_client.exec_command("rm -rf {}".format(output_path))
+    exit_status = stdout.channel.recv_exit_status()
+    if exit_status != 0:
+        print("Failed to cleanup: {}".format(exit_status))
     
     # Return Final iso save name
     iso_save_name = str(iso_name) + "_auto.iso"
