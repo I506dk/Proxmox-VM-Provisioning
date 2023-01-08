@@ -195,7 +195,8 @@ def ssh_connect(hostname, username, password, port=22):
             # Get all operating systems for configs that don't explicitly supply an iso path
             if not virtual_machine.__contains__("iso image path"):
                 current_os = virtual_machine["operating system"]
-                iso_files_to_modify.append(current_os)
+                if str(current_os) not in iso_files_to_modify:
+                    iso_files_to_modify.append(current_os)
 
         # Initialize list to hold modified iso image names
         # Initialize dictionary to hold modified iso image names for the respective OS
