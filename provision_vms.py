@@ -221,7 +221,7 @@ def ssh_connect(hostname, username, password, port=22):
                 current_hostname = virtual_machine["hostname"]
                 current_cores = virtual_machine["cpu"]
                 current_memory = int(virtual_machine["memory"]) * 1024
-                current_disk = int(virtual_machine["disk"]) * 1024
+                current_disk = int(virtual_machine["disk"])
             # Use raw path if given
             else:
                 ide0 = virtual_machine["iso image path"]
